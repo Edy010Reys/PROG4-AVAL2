@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> {
                     builder: (ctx) {
                       return AlertDialog(
                         title: const Text('Confirmação'),
-                        content: const Text('Confirma a remoção do contato?'),
+                        content: const Text('Confirmar a remoção do item?'),
                         actions: [
                           TextButton(
                             onPressed: () {
@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                 onDismissed: (_) {
                   final provider =
                       Provider.of<ToDoListProvider>(context, listen: false);
-                  provider.delete(items[index]);
+                  provider.delete(items[index].id);
                 },
                 child: ItemTile(items[index]),
               ),

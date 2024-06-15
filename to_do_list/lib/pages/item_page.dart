@@ -21,6 +21,7 @@ class _ItemPageState extends State<ItemPage> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _dateController = TextEditingController();
+  final _categoryController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -33,6 +34,31 @@ class _ItemPageState extends State<ItemPage> {
     _titleController.text = item?.title ?? '';
     _descriptionController.text = item?.description ?? '';
     _dateController.text = item?.date ?? '';
+    _categoryController.text = item?.category ?? '';
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _dateController.dispose();
+    _categoryController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(), // Initial date to display
+      firstDate: DateTime(2000), // Minimum date
+      lastDate: DateTime(2100), // Maximum date
+    );
+    if (picked != null) {
+      setState(() {
+        _dateController.text =
+            "${picked.toLocal()}".split(' ')[0]; // Format the date
+      });
+    }
   }
 
   void _formSubmit(BuildContext context) async {
@@ -45,6 +71,7 @@ class _ItemPageState extends State<ItemPage> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       date: _dateController.text.trim(),
+      category: _categoryController.text.trim(),
     );
 
     final provider = Provider.of<ToDoListProvider>(
@@ -81,20 +108,10 @@ class _ItemPageState extends State<ItemPage> {
     return null;
   }
 
-  String? _dateValidator(String? text) {
-    final error = _titleValidator(text);
-    if (error != null) {
-      return error;
-    }
-    if (int.tryParse(text!) == null) {
-      return 'Data Inválida';
-    }
-
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final categories =
+        Provider.of<ToDoListProvider>(context, listen: true).categoryItems;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Novo Item'),
@@ -127,12 +144,37 @@ class _ItemPageState extends State<ItemPage> {
                           controller: _descriptionController,
                           validator: _descriptionValidator,
                         ),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Data',
+                        InkWell(
+                          onTap: () => _selectDate(context),
+                          child: InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: 'Data',
+                            ),
+                            child: Text(
+                              _dateController.text.isEmpty
+                                  ? 'Selecione uma data'
+                                  : _dateController.text,
+                            ),
                           ),
-                          controller: _dateController,
-                          validator: _dateValidator,
+                        ),
+                        DropdownButtonFormField(
+                          decoration: const InputDecoration(
+                              labelStyle: TextStyle(fontSize: 10.0),
+                              labelText: 'Escolha uma Categoria'),
+                          value: categories.first,
+                          items: categories
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (String? value) {
+                            // This is called when the user selects an item.
+                            setState(() {
+                              _categoryController.text = value ?? '';
+                            });
+                          },
                         ),
                       ],
                     ),
